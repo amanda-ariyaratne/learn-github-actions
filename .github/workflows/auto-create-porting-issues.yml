@@ -36,20 +36,17 @@ jobs:
             const assignees = issue.assignees.map(assignee => assignee.login);
             const issueTitle = issue.title;
 
-            // Fetch all issues in the repository
-            const allIssues = await github.paginate(github.rest.issues.listForRepo, {
-              owner,
-              repo,
-              state: 'open'
-            });
-
             for (const label of pendingLabels) {
               const portType = label.name.includes('FrontPort') ? '[Front Port]' : '[Back Port]';
               const version = label.name.split('-')[1];
               const newIssueTitle = `[Internal]${portType}[${version}] ${issueTitle}`;
 
-              // Check if an issue with the same title already exists
-              const duplicateIssue = allIssues.find(issue => issue.title === newIssueTitle);
+              // Search for existing issues with the same title
+              const searchQuery = `repo:${owner}/${repo} is:issue in:title ${newIssueTitle}`;
+              const searchResults = await github.rest.search.issuesAndPullRequests({
+                q: searchQuery
+              });
+              const duplicateIssue = searchResults.data.items.find(issue => issue.title === newIssueTitle);
 
               if (duplicateIssue) {
                 console.log(`Issue with title '${newIssueTitle}' already exists as #${duplicateIssue.number}.`);
