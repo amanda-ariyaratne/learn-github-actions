@@ -36,12 +36,28 @@ jobs:
             const assignees = issue.assignees.map(assignee => assignee.login);
             const issueTitle = issue.title;
 
+            // Fetch all issues in the repository
+            const allIssues = await github.paginate(github.rest.issues.listForRepo, {
+              owner,
+              repo,
+              state: 'open'
+            });
+
             for (const label of pendingLabels) {
               const portType = label.name.includes('FrontPort') ? '[Front Port]' : '[Back Port]';
               const version = label.name.split('-')[1];
+              const newIssueTitle = `[Internal]${portType}[${version}] ${issueTitle}`;
+
+              // Check if an issue with the same title already exists
+              const duplicateIssue = allIssues.find(issue => issue.title === newIssueTitle);
+
+              if (duplicateIssue) {
+                console.log(`Issue with title '${newIssueTitle}' already exists as #${duplicateIssue.number}.`);
+                continue;  // Skip creation if duplicate exists
+              }
 
               const issueData = {
-                  title: `[Internal]${portType}[${version}] ${issueTitle}`,
+                  title: newIssueTitle,
                   labels: ['Type/Internal-Patch', label.name.split('/')[1]],
                   body: `This issue was automatically created to track ${portType.toLowerCase()} of ${issueTitle}.
                          Original issue: #${issue_number}`,
