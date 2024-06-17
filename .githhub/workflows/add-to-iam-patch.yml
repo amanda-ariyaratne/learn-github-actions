@@ -1,0 +1,15 @@
+name: Add issue to IAM Patch project
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  add-to-project:
+    if: github.event.label.name == 'patch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/add-to-project@RELEASE_VERSION
+        with:
+          project-url: https://github.com/users/amanda-ariyaratne/projects/1
+          github-token: ${{ secrets.ADD_TO_PROJECT_PAT }}
