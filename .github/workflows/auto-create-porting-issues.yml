@@ -1,6 +1,6 @@
 name: Create porting issues
 
-'on':
+on:
   issues:
     types:
       - labeled
