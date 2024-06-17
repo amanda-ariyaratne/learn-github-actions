@@ -1,0 +1,59 @@
+name: Create porting issues
+
+'on':
+  issues:
+    types:
+      - labeled
+
+jobs:
+  create_issue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for Pending labels and create issues
+        uses: actions/github-script@v6
+        with:
+          github-token: '${{ secrets.ADD_TO_PROJECT_PAT }}'
+          script: |
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+
+            // Fetch complete issue details
+            const issueDetails = await github.rest.issues.get({
+                owner,
+                repo,
+                issue_number
+            });
+
+            const issue = issueDetails.data;
+            // Filter for labels that start with 'Pending/'
+            const pendingLabels = issue.labels.filter(label => label.name.startsWith('Pending/'));
+
+            if (pendingLabels.length === 0) {
+              console.log("No 'Pending/' labels found.");
+              return;  // Exit if no relevant labels are present
+            }
+
+            const assignees = issue.assignees.map(assignee => assignee.login);
+            const issueTitle = issue.title;
+
+            for (const label of pendingLabels) {
+              const portType = label.name.includes('FrontPort') ? '[Front Port]' : '[Back Port]';
+              const version = label.name.split('-')[1];
+
+              const issueData = {
+                  title: `[Internal]${portType}[${version}] ${issueTitle}`,
+                  labels: ['Type/Internal-Patch', label.name.split('/')[1]],
+                  body: `This issue was automatically created to track ${portType.toLowerCase()} of ${issueTitle}.
+                         Original issue: #${issue_number}`,
+                  assignees: assignees
+              };
+
+              // Create a new issue for each Pending label
+              const response = await github.rest.issues.create({
+                  owner,
+                  repo,
+                  ...issueData
+              });
+
+              console.log(`Created issue ${response.data.number} for ${label.name}`);
+            }
