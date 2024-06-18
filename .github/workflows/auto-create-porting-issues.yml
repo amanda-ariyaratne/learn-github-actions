@@ -49,7 +49,7 @@ jobs:
 
             if (duplicateIssue) {
               console.log(`Issue with title '${newIssueTitle}' already exists as #${duplicateIssue.number}.`);
-              continue;
+              return;
             }
 
             const issueData = {
