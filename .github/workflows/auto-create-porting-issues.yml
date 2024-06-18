@@ -35,7 +35,7 @@ jobs:
             const issue = issueDetails.data;
             const assignees = issue.assignees.map(assignee => assignee.login);
             const issueTitle = issue.title;
-            const label = context.payload.label.name;
+            const label = context.payload.label;
             const portType = label.name.includes('FrontPort') ? '[Front Port]' : '[Back Port]';
             const version = label.name.split('-')[1];
             const newIssueTitle = `[Internal]${portType}[${version}] ${issueTitle}`;
